@@ -1,25 +1,46 @@
-# Finding Known Spike Mutations in SARS-CoV-2 Variants with Pairwise alignment
+# Aligning Coronavirus Spike Proteins with Progressive Alignment and BLOSUM62
 
 ## Research Question
-Can a pairwise alignment program I write identify known spike protein mutations in the Alpha SARS-CoV-2 variant?
+Can a pairwise alignment program I write using Needleman-Wunsch and the BLOSUM62 scoring matrix, correctly align four human coronavirus spike proteins?
 
 ## Description of the question
-The spike protein is the main target of the immune response to SARS-CoV-2 and is used as the main target in many COVID-19 vaccines. Mutations in the spike protein can therefore affect how well the virus enters cells, spreads and also evades existing immunity. (Harvey et al., 2021). Each genomic variant such as Alpha or Delta, is defined by a specific combination of spike mutations (single amino acid variants and or insertions or deletions). (Mohebbi et al., 2024). 
+The spike protein sits on the surface of coronaviruses and lets the virus attach to and enter human cells. It is also the main target of the immune response and of many COVID-19 vaccines (Harvey et al., 2021). Several different coronaviruses infect humans. Some, like SARS-CoV-1 and SARS-CoV-2, cause severe disease, while others, like HCoV-OC43 and HCoV-HKU1, cause the common cold.
 
+Lining up the spike proteins of different coronaviruses shows which parts have stayed the same (conserved) and which parts have changed. Comparing more than two sequences at once requires a multiple sequence alignment. One common way to build one is progressive alignment, which aligns the most similar sequences first and then adds the others step by step (Feng & Doolittle, 1987).
+ 
 ## Why this question matters
-One way to identify mutations is by comparing a viral sequence with a reference sequence and identifying the differences. My project will perform a simplified version of this process on SARS-CoV-2 spike protein sequences. In this project, I will test whether a pairwise alignment program that I write can identify these known mutations from the spike protein sequences in the Alpha SARS-CoV-2 variant.
+Conserved regions of a protein are often important for how it works, because changes there are less likely to be tolerated. A multiple sequence alignment shows at a glance which parts of the spike are shared across coronaviruses and which parts vary. In this project, I will build a simplified version of the progressive alignment process used by standard tools and test whether it gives sensible results on four real spike proteins. The project is kept to four sequences so that each step can be checked before scaling up.
 
 ## How the results may be innovative
-I will be using Pairwise alignment, a standard algorithm as a small mutation finder. My program will turn its alignment into a list of mutations and compare that list with published mutations for each variant.
+I will build progressive alignment from the ground up, starting from my own Needleman-Wunsch pairwise aligner. Instead of using a tool as a black box, I will be able to see each step; the pairwise scores, the order in which sequences are joined, and how gaps are placed.
 
 ## Algorithm and Algorithm Class
-The algorithm class is dynamic programming and the algorithm to be used is Needleman-Wunsch global pairwise alignment with a simple scoring scheme (+1 for a match, -1 for a mismatch and -1 for a gap).
+The algorithm class is dynamic programming. The project has two steps, and the second builds on the first:
 
-This algorithm class is a good fit because if one is to compare two sequences letter by letter, it fails if one of them has a deletion because there is a shift in letters after that deletion making it look like a mismatch. Alignment is able to find out where the gaps belong, so the rest lines up. A variant’s spike protein is basically the same protein with just a few changes, and this is what global alignment is made for.
+### Step 1: 
+Needleman-Wunsch global pairwise alignment (Needleman & Wunsch, 1970), scored with the BLOSUM62 substitution matrix (Henikoff & Henikoff, 1992). Instead of a blanket score for every mismatch, each diagonal move looks up the score for that specific pair of amino acids in the BLOSUM62 table. Because BLOSUM62 scores range from about -4 to +11, the gap penalty also has to be chosen to fit them (see Pitfall Scan).
+
+### Step 2: 
+Progressive multiple sequence alignment, built on top of the pairwise aligner:
+•	Align every pair of sequences (6 pairs for 4 sequences) and calculate how similar each pair is.
+•	Start with the most similar pair and align them with Needleman-Wunsch.
+•	Add the next most similar sequence to the existing alignment, and repeat until all four are aligned. When a new sequence is aligned to a group, each column of the group is scored against the new letter using the average BLOSUM62 score over the letters in that column.
+•	The order in which the sequences are joined forms a simple guide tree.
+
+This algorithm class is a good fit because, as with two sequences, comparing spike proteins letter by letter fails as soon as one has an insertion or deletion, because every letter after it shifts. Alignment finds where the gaps belong so the rest lines up.
+
+BLOSUM62 is a better fit than a simple match/mismatch score for this question. The spike proteins of different coronaviruses differ a lot, and BLOSUM62 gives higher scores to amino acid swaps that happen often in real proteins (like I and L) and lower scores to rare ones (like W and A). A simple +1/-1 scheme treats every mismatch the same, which makes distant sequences much harder to align well.
+
 
 ## Data Plan
-The data reference will be the spike protein of the original SARS-CoV-2 strain (Wuhan-Hu-1), with NCBI accession number YP_009724390.1 which is 1,273 amino acids long.
-I plan to select a complete Alpha variant spike protein sequence from NCBI Virus, and its accession number will be recorded in README.md file.
+The sequences come from a UniProt file of coronavirus spike glycoproteins. The file contains 2,287 spike sequences. I will use four reviewed (Swiss-Prot) entries, since these are manually checked and complete:
+
+Virus	Disease in humans	UniProt accession	Length (amino acids)
+SARS-CoV-2	|Severe (COVID-19)	P0DTC2	1,273
+SARS-CoV-1	|Severe (SARS, 2003)	P59594	1,255
+HCoV-OC43	|Common cold	P36334	1,353
+HCoV-HKU1 |(isolate N5)	Common cold	Q0ZME7	1,351
+
 
 *The expected mutation list will be based on the published characteristic Alpha spike mutations reported by Harvey et al. (2021). The individual sequence may contain additional or missing mutations which will be reported separately.
 
