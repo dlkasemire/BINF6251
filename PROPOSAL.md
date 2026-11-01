@@ -127,6 +127,8 @@ results/ 	- alignments, score tables and conservation plot
 ## Generative AI Disclosure
 Claude opus 5.5 Medium was used to understand the different algorithms and guide in selecting which one to work with. https://claude.ai/share/d67108cf-0431-4eed-9c26-bac27620ebc5
 
+Claude was also used to explain the BLOSUM62 matrix and progressive alignment, to compare candidate sequences from the UniProt file, and to help reorganize this proposal around this research question.
+
 ## References
 Feng, D.-F., & Doolittle, R. F. (1987). Progressive sequence alignment as a prerequisite to correct phylogenetic trees. Journal of Molecular Evolution, 25, 351–360.
 
