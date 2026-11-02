@@ -342,13 +342,13 @@ HE-G
 The new E lines up under column 2 (which holds E and a gap, so it scores BLOSUM62 E/E = 5), and the new sequence gets a gap under the A column. Score: 8 + 5 - 10 + 6 = **9**.
 
 ## Complexity and Bottlenecks
-*To be completed.*
+
 
 ## Validation and Testing Plan
-*To be completed.*
+
 
 ## Updated Pitfall and Risk Log
-*To be completed.*
+
 
 ## Appendix: Generative AI Usage
-*To be completed.*
+
