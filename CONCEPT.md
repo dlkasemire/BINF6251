@@ -342,7 +342,30 @@ HE-G
 The new E lines up under column 2 (which holds E and a gap, so it scores BLOSUM62 E/E = 5), and the new sequence gets a gap under the A column. Score: 8 + 5 - 10 + 6 = **9**.
 
 ## Complexity and Bottlenecks
-
+Notation
+n, m: the lengths of the two sequences in a pairwise alignment
+k: the number of sequences (4 in this project)
+L: the typical sequence length (about 1,300 amino acids for these spike proteins)
+Step 1: one pairwise alignment (needleman_wunsch)
+Time: O(n × m). Every cell in the grid is filled once, and each cell does a fixed amount of work: one BLOSUM62 lookup, three additions and a comparison. The traceback takes at most n + m steps, which is small next to filling the grid.
+Space: O(n × m). Two grids are kept: the score grid and the trace grid.
+For two spike proteins of about 1,300 amino acids, each grid has about 1.6 million cells.
+Step 2: the whole progressive alignment
+Comparing all pairs: k × (k − 1) / 2 pairwise alignments, which is 6 for 4 sequences. Each costs O(L²), so this part is O(k² × L²), or about 10 million cells for this project.
+Adding a sequence to the group (add_to_group): the grid is still about L × L cells, but each diagonal step averages BLOSUM62 scores over the r rows already in the group. One addition costs O(r × L²). Over all additions this is also O(k² × L²).
+Overall time: O(k² × L²). Doubling the number of sequences or the sequence length makes the program about 4 times slower.
+Overall space: O(L²) for the grids, since only one alignment's grids are needed at a time, plus O(k × L) to store the final alignment.
+Measured estimate
+A plain Python version of Function 4, run on the SARS-CoV-2 and SARS-CoV-1 spike proteins, took about 1 second to fill the grid and used about 75 MB of memory at its peak. The full four-sequence run should therefore take roughly 10 to 30 seconds on a typical laptop.
+Bottlenecks and when they would become a problem
+Filling the grids is the most expensive part. It is manageable for 4 spike proteins but grows quickly with more sequences: 40 sequences would mean 780 pairwise alignments instead of 6.
+Memory is the biggest risk. Memory grows with the square of the length, so aligning whole genomes (about 30,000 letters) instead of spike proteins would need roughly 500 times more memory than one spike alignment. This is why the project is limited to the spike protein.
+Column scoring in add_to_group gets slower as the group grows, because every diagonal step averages over every row in the group.
+Ideas for reducing these costs
+Run each pairwise alignment only once and reuse the similarity table (already part of the design).
+Keep only one alignment's grids in memory at a time, and discard them once the traceback is done.
+Store the grids as NumPy arrays instead of Python lists to reduce memory use, if needed.
+For larger datasets, a column could be summarized once as counts of each amino acid (a profile), so that scoring a column takes the same time no matter how many rows are in the group.
 
 ## Validation and Testing Plan
 
