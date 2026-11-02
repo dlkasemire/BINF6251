@@ -342,35 +342,88 @@ HE-G
 The new E lines up under column 2 (which holds E and a gap, so it scores BLOSUM62 E/E = 5), and the new sequence gets a gap under the A column. Score: 8 + 5 - 10 + 6 = **9**.
 
 ## Complexity and Bottlenecks
-Notation
-n, m: the lengths of the two sequences in a pairwise alignment
-k: the number of sequences (4 in this project)
-L: the typical sequence length (about 1,300 amino acids for these spike proteins)
-Step 1: one pairwise alignment (needleman_wunsch)
-Time: O(n × m). Every cell in the grid is filled once, and each cell does a fixed amount of work: one BLOSUM62 lookup, three additions and a comparison. The traceback takes at most n + m steps, which is small next to filling the grid.
-Space: O(n × m). Two grids are kept: the score grid and the trace grid.
-For two spike proteins of about 1,300 amino acids, each grid has about 1.6 million cells.
-Step 2: the whole progressive alignment
-Comparing all pairs: k × (k − 1) / 2 pairwise alignments, which is 6 for 4 sequences. Each costs O(L²), so this part is O(k² × L²), or about 10 million cells for this project.
-Adding a sequence to the group (add_to_group): the grid is still about L × L cells, but each diagonal step averages BLOSUM62 scores over the r rows already in the group. One addition costs O(r × L²). Over all additions this is also O(k² × L²).
-Overall time: O(k² × L²). Doubling the number of sequences or the sequence length makes the program about 4 times slower.
-Overall space: O(L²) for the grids, since only one alignment's grids are needed at a time, plus O(k × L) to store the final alignment.
-Measured estimate
-A plain Python version of Function 4, run on the SARS-CoV-2 and SARS-CoV-1 spike proteins, took about 1 second to fill the grid and used about 75 MB of memory at its peak. The full four-sequence run should therefore take roughly 10 to 30 seconds on a typical laptop.
-Bottlenecks and when they would become a problem
-Filling the grids is the most expensive part. It is manageable for 4 spike proteins but grows quickly with more sequences: 40 sequences would mean 780 pairwise alignments instead of 6.
-Memory is the biggest risk. Memory grows with the square of the length, so aligning whole genomes (about 30,000 letters) instead of spike proteins would need roughly 500 times more memory than one spike alignment. This is why the project is limited to the spike protein.
-Column scoring in add_to_group gets slower as the group grows, because every diagonal step averages over every row in the group.
-Ideas for reducing these costs
-Run each pairwise alignment only once and reuse the similarity table (already part of the design).
-Keep only one alignment's grids in memory at a time, and discard them once the traceback is done.
-Store the grids as NumPy arrays instead of Python lists to reduce memory use, if needed.
-For larger datasets, a column could be summarized once as counts of each amino acid (a profile), so that scoring a column takes the same time no matter how many rows are in the group.
+How long it takes (time)
+Most of the work is filling in the grid. Each cell takes the same small amount of work: one BLOSUM62 lookup, three additions, and picking the largest score.
+So the time depends on how many cells there are. For two sequences of length n and m, the grid has about n × m cells, so the time is O(n × m).
+For my spike proteins, which are about 1,300 amino acids long, that is about 1,300 × 1,300 = 1.7 million cells for each pairwise alignment.
+For the whole project:
+
+Comparing every pair of my 4 sequences means 6 pairwise alignments.
+Adding the third and fourth sequences to the group means 2 more grids of about the same size. These are a little slower, because each cell compares the new letter with every letter already in that column.
+So the whole program fills about 8 grids of about 1.7 million cells each.
+How much memory it uses (space)
+Each alignment keeps two grids (the score grid and the trace grid), each with about n × m cells, so the memory is also O(n × m).
+Once an alignment is finished, its grids are no longer needed, so only one alignment's grids have to be in memory at a time.
+
+Bottlenecks
+Filling the grids is the slowest part of the program.
+Memory grows quickly with sequence length. If both sequences are twice as long, the grid has four times as many cells. Whole coronavirus genomes are about 30,000 letters long, which would make the grid far too large. This is why I am using only the spike protein.
+More sequences means many more pairs to compare. With 4 sequences there are 6 pairs, but with 40 sequences there would be 780.
+
+How I will keep it manageable
+Use only the spike protein and only 4 sequences.
+Align each pair only once and save the results in the similarity table.
+Delete each alignment's grids once the traceback is done.
+Measure how long one real pairwise alignment takes and how much memory it uses before running the full program.
+
 
 ## Validation and Testing Plan
+1. Small hand-worked examples (answer known)
+Test	Expected result
+Align HEAG and HAG (gap penalty -10)	Alignment HEAG / H-AG, score 8 (worked out by hand above)
+Add HEG to that group	Alignment HEAG / H-AG / HE-G, score 9 (worked out by hand above)
+Align a sequence with an exact copy of itself	No gaps, 100% identity
+A sequence that is empty	The program stops with the message "Sequence <name> is empty."
+A sequence containing a letter not in BLOSUM62 (for example J)	The program stops and names the letter and its position
+An accession number that is not in the file	The program stops with "Accession <number> not found in file."
+2. Edited copies of a real sequence (answer known)
+I will take a short piece (about 50 letters) of the SARS-CoV-2 spike and make three copies by hand:
+Copy 1: two letters swapped for different amino acids
+Copy 2: three letters deleted in a row
+Copy 3: both changes
+Expected result: in the final alignment, the swapped letters line up as mismatches, and the deleted letters appear as gaps in the right place. Since I made the changes myself, I know exactly where they should be.
+3. The real data (four spike proteins)
+Expected results:
+My pairwise alignment scores match Biopython's pairwise aligner for all 6 pairs, using the same BLOSUM62 matrix and the same gap penalty.
+SARS-CoV-2 is most similar to SARS-CoV-1, and HCoV-OC43 is most similar to HCoV-HKU1.
+So the joining order starts with SARS-CoV-2 and SARS-CoV-1.
+The program finishes in a reasonable time. This is also my stress test, since these are the largest sequences the program will handle.
+Signs that something is wrong
+A pairwise score does not match Biopython's.
+The rows of the final alignment are not all the same length.
+Removing the gaps from a row does not give back the original sequence.
+A sequence aligned with an exact copy of itself gets gaps.
+SARS-CoV-2 is not grouped with SARS-CoV-1 first.
+In the edited copies, the known changes are not where I put them.
+Automated tests
+Unit tests for each function, for example:
+load_blosum62 gives -1 for (E, A) and 11 for (W, W).
+check_sequence stops on an empty sequence and on an unexpected letter.
+needleman_wunsch gives the HEAG / H-AG example.
+column_score gives 5 for the letter E against the column ["E", "-"].
+End-to-end test: run the whole program on four short made-up sequences and compare the result with my hand-worked answer.
+Checks that should always be true (run after every alignment):
+All rows have the same length.
+Removing the gaps from each row gives back the original sequence.
+Adding up the score of each column of the returned alignment gives the same total as the returned score.
 
 
 ## Updated Pitfall and Risk Log
+1. One gap penalty may scatter gaps
+Why it matters: With one gap penalty, a gap of 3 letters in a row costs the same as 3 separate one-letter gaps. Real insertions and deletions usually happen as a chunk, so the program may break up a deletion that should stay together.
+How I will handle it: The edited copy with 3 letters deleted in a row will show whether the gap stays together. If not, I will note it as a limitation. Using separate penalties for opening and extending a gap would fix this, but it is outside the scope of this project.
+2. How to score a column that contains a gap
+Why it matters: When a new letter is scored against a column of the group, I had to decide what to do with gaps in that column. In the Step 2 worked example, counting the gap as a penalty pushed the new E under the A column instead of under the matching E.
+How I will handle it: column_score leaves gaps out of the average. I will state this choice clearly, because a different choice can give a different alignment.
+3. Equally good alignments can look different
+Why it matters: Sometimes two alignments have exactly the same score, especially where the same letter repeats (for example, a deletion in "YY" could go in either spot). My tie rule picks one, but Biopython might pick the other.
+How I will handle it: When checking against Biopython, I will compare the scores, not the exact positions of the gaps.
+4. Off-by-one mistakes in the grid
+Why it matters: The grid has one extra row and column for the starting edge, so row i of the grid matches letter i - 1 of the sequence. Mixing these up is an easy mistake that would shift the whole alignment.
+How I will handle it: The small hand-worked examples and the "remove the gaps and get back the original sequence" check would catch this.
+5. Different ways to calculate percent identity
+Why it matters: Dividing the number of matches by the shorter sequence's length gives a different number than dividing by the alignment length. Using different methods would make the similarity table inconsistent.
+How I will handle it: I will always divide by the length of the shorter original sequence, and state this in the README.
 
 
 ## Appendix: Generative AI Usage
