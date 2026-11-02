@@ -376,51 +376,59 @@ Align a sequence with an exact copy of itself	No gaps, 100% identity
 A sequence that is empty	The program stops with the message "Sequence <name> is empty."
 A sequence containing a letter not in BLOSUM62 (for example J)	The program stops and names the letter and its position
 An accession number that is not in the file	The program stops with "Accession <number> not found in file."
+
 2. Edited copies of a real sequence (answer known)
 I will take a short piece (about 50 letters) of the SARS-CoV-2 spike and make three copies by hand:
 Copy 1: two letters swapped for different amino acids
 Copy 2: three letters deleted in a row
 Copy 3: both changes
 Expected result: in the final alignment, the swapped letters line up as mismatches, and the deleted letters appear as gaps in the right place. Since I made the changes myself, I know exactly where they should be.
+
 3. The real data (four spike proteins)
 Expected results:
 My pairwise alignment scores match Biopython's pairwise aligner for all 6 pairs, using the same BLOSUM62 matrix and the same gap penalty.
 SARS-CoV-2 is most similar to SARS-CoV-1, and HCoV-OC43 is most similar to HCoV-HKU1.
 So the joining order starts with SARS-CoV-2 and SARS-CoV-1.
 The program finishes in a reasonable time. This is also my stress test, since these are the largest sequences the program will handle.
+
 Signs that something is wrong
-A pairwise score does not match Biopython's.
-The rows of the final alignment are not all the same length.
-Removing the gaps from a row does not give back the original sequence.
-A sequence aligned with an exact copy of itself gets gaps.
-SARS-CoV-2 is not grouped with SARS-CoV-1 first.
-In the edited copies, the known changes are not where I put them.
+* A pairwise score does not match Biopython's.
+* The rows of the final alignment are not all the same length.
+* Removing the gaps from a row does not give back the original sequence.
+* A sequence aligned with an exact copy of itself gets gaps.
+* SARS-CoV-2 is not grouped with SARS-CoV-1 first.
+* In the edited copies, the known changes are not where I put them.
+
 Automated tests
 Unit tests for each function, for example:
-load_blosum62 gives -1 for (E, A) and 11 for (W, W).
-check_sequence stops on an empty sequence and on an unexpected letter.
-needleman_wunsch gives the HEAG / H-AG example.
-column_score gives 5 for the letter E against the column ["E", "-"].
-End-to-end test: run the whole program on four short made-up sequences and compare the result with my hand-worked answer.
-Checks that should always be true (run after every alignment):
-All rows have the same length.
-Removing the gaps from each row gives back the original sequence.
-Adding up the score of each column of the returned alignment gives the same total as the returned score.
+* load_blosum62 gives -1 for (E, A) and 11 for (W, W).
+* check_sequence stops on an empty sequence and on an unexpected letter.
+* needleman_wunsch gives the HEAG / H-AG example.
+* column_score gives 5 for the letter E against the column ["E", "-"].
 
+End-to-end test: run the whole program on four short made-up sequences and compare the result with my hand-worked answer.
+* Checks that should always be true (run after every alignment):
+* All rows have the same length.
+* Removing the gaps from each row gives back the original sequence.
+* Adding up the score of each column of the returned alignment gives the same total as the returned score.
 
 ## Updated Pitfall and Risk Log
 1. One gap penalty may scatter gaps
 Why it matters: With one gap penalty, a gap of 3 letters in a row costs the same as 3 separate one-letter gaps. Real insertions and deletions usually happen as a chunk, so the program may break up a deletion that should stay together.
 How I will handle it: The edited copy with 3 letters deleted in a row will show whether the gap stays together. If not, I will note it as a limitation. Using separate penalties for opening and extending a gap would fix this, but it is outside the scope of this project.
+
 2. How to score a column that contains a gap
 Why it matters: When a new letter is scored against a column of the group, I had to decide what to do with gaps in that column. In the Step 2 worked example, counting the gap as a penalty pushed the new E under the A column instead of under the matching E.
 How I will handle it: column_score leaves gaps out of the average. I will state this choice clearly, because a different choice can give a different alignment.
+
 3. Equally good alignments can look different
 Why it matters: Sometimes two alignments have exactly the same score, especially where the same letter repeats (for example, a deletion in "YY" could go in either spot). My tie rule picks one, but Biopython might pick the other.
 How I will handle it: When checking against Biopython, I will compare the scores, not the exact positions of the gaps.
+
 4. Off-by-one mistakes in the grid
 Why it matters: The grid has one extra row and column for the starting edge, so row i of the grid matches letter i - 1 of the sequence. Mixing these up is an easy mistake that would shift the whole alignment.
 How I will handle it: The small hand-worked examples and the "remove the gaps and get back the original sequence" check would catch this.
+
 5. Different ways to calculate percent identity
 Why it matters: Dividing the number of matches by the shorter sequence's length gives a different number than dividing by the alignment length. Using different methods would make the similarity table inconsistent.
 How I will handle it: I will always divide by the length of the shorter original sequence, and state this in the README.
