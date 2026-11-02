@@ -7,14 +7,14 @@
 1. **Needleman-Wunsch global pairwise alignment**, scored with the BLOSUM62 substitution matrix and a single (linear) gap penalty.
 2. **Progressive multiple sequence alignment**, which uses the pairwise aligner to compare every pair of sequences, joins the most similar pair first, and then adds the remaining sequences to the alignment one at a time.
 
-**Data:** Four reviewed spike protein sequences from a UniProt FASTA file provided by my professor: SARS-CoV-2 (P0DTC2), SARS-CoV-1 (P59594), HCoV-OC43 (P36334) and HCoV-HKU1 (Q0ZME7). These are about 1,255 to 1,353 amino acids long. For testing, I will also use short made-up sequences and edited copies of a short piece of the SARS-CoV-2 spike.
+**Data:** Four reviewed spike protein sequences from a UniProt FASTA file: SARS-CoV-2 (P0DTC2), SARS-CoV-1 (P59594), HCoV-OC43 (P36334) and HCoV-HKU1 (Q0ZME7). These are about 1,255 to 1,353 amino acids long. For testing, I will also use short made-up sequences and edited copies of a short piece of the SARS-CoV-2 spike.
 
 ## Inputs, Outputs, and Assumptions
 
 ### Inputs
 | Input | Type and format | Example |
 | --- | --- | --- |
-| Sequence file | FASTA text file of protein sequences | The UniProt spike file from my professor |
+| Sequence file | FASTA text file of protein sequences | The UniProt spike file |
 | Accession numbers to use | List of text strings | `["P0DTC2", "P59594", "P36334", "Q0ZME7"]` |
 | BLOSUM62 matrix | Text file in the standard NCBI matrix format (letters across the top and down the side, scores in between) | `data/BLOSUM62.txt` |
 | Gap penalty | One negative number | `-10` |
