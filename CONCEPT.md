@@ -435,4 +435,21 @@ How I will handle it: I will always divide by the length of the shorter original
 
 
 ## Appendix: Generative AI Usage
+Claude Opus 5.5 (Anthropic) was used to restructure both my proposal and concept from finding known mutations in the Alpha SARS-CoV-2 variant with pairwise alignment to aligning four coronavirus spike proteins with progressive alignment and the BLOSUM62 scoring matrix. BLOSUM62 and progressive alignment were new to me, so I used Claude to help me understand them and plan how to build them as a beginner.
+
+Prompts used include:
+* I need to understand progressive alignment and how to use BLOSUM62 to align a few protein sequences. What is BLOSUM62, and how is it different from scoring +1 for a match and −1 for a mismatch?
+* How does Needleman-Wunsch change when I use BLOSUM62?
+* What is progressive alignment, and how does it build on pairwise alignment?
+* What is a guide tree, explain to a beginner?
+* How does it decide which sequences to join first?
+* How do I align a new sequence to a group of sequences that are already aligned?
+* How do I choose which sequences to use from a large file?
+* What gap penalty should I use with BLOSUM62
+* Why does it matter?
+* How big can my sequences be before the program gets too slow?
+* How will I know my alignment is correct?
+* What mistakes am I likely to make, remember I am a beginner? 
+* Can we work through the pseudocode? I need to understand every part?
+
 
