@@ -1,7 +1,7 @@
 # Aligning Coronavirus Spike Proteins with Progressive Alignment and BLOSUM62
 
 ## Research Question
-Can a pairwise alignment program I write using Needleman-Wunsch and the BLOSUM62 scoring matrix, correctly align four human coronavirus spike proteins?
+Can a progressive alignment program I write using Needleman-Wunsch and the BLOSUM62 scoring matrix, correctly align four human coronavirus spike proteins?
 
 ## Description of the question
 The spike protein sits on the surface of coronaviruses and lets the virus attach to and enter human cells. It is also the main target of the immune response and of many COVID-19 vaccines (Harvey et al., 2021). Several different coronaviruses infect humans. Some, like SARS-CoV-1 and SARS-CoV-2, cause severe disease, while others, like HCoV-OC43 and HCoV-HKU1, cause the common cold.
