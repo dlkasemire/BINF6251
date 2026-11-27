@@ -9,4 +9,4 @@ The research question is whether my program can correctly align these four prote
 ## Project documents
 * **Part 1:** [PROPOSAL.md](PROPOSAL.md), the project proposal
 * **Part 2:** [CONCEPT.md](CONCEPT.md), the conceptual progress report
-* **Parts 3 and 4:** the implementation is on the `review_copy` branch. See the pull request: https://github.com/dlkasemire/BINF6251/pull/1
+* **Parts 3 and 4:** the implementation is on the `review_copy` branch. See the pull request: [pull request](https://github.com/dlkasemire/BINF6251/pull/1)
